@@ -13,7 +13,7 @@ def to_kelvin(C):
     '''
     return C + 273.15
 
-roughf = datasets.Trial("../data/rough.csv", y_delta, to_kelvin)
+roughf = datasets.Trial("../data/smooth.csv", y_delta, to_kelvin)
 
 plt.style.use('seaborn')
 
@@ -36,7 +36,7 @@ print(rough_cyl.area)
 print(rough_cyl.volume)
 
 A = .0245
-T_amb = 24 + 273.15  # K
+T_amb = 23.9 + 273.15  # K
 
 M = 0.368997
 C = 890

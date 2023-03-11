@@ -22,12 +22,13 @@ class DiffEqFitSystem:
         self.timestep = timestep
         self.interval = (interval[0], interval[1] + timestep)
         self.times = np.arange(*self.interval, timestep)
-
         self.buffer_ratio = buffer_ratio
         self.metadata = metadata
 
         self.accesses = 0
         self.recalculations = 0
+
+        # print(len(self.parameters + self.constant_params))
 
     def recalculate_values(self):
         self.recalculations += 1
@@ -37,23 +38,26 @@ class DiffEqFitSystem:
             self.initials,
             t_eval=self.times,
             method='LSODA',
-            args=self.parameters + self.constant_params)  # + tuple(1))
+            args=(self.parameters + self.constant_params))  # + tuple(1))
         self.y = sol["y"].flatten()
 
-    def get_values(self, tarr_in, parameters):
+    def get_values(self, tarr_in, *parameters):
         # print("i was called")
         '''
         Return the appropriate yarr out given tarr_in and parameters
         Recalculate data array if parameters have changed.
         '''
         self.accesses += 1
-        if (handle_ambiguous_tuple(parameters) != self.parameters
-                or np.max(tarr_in) > self.interval[1]):
-            self.parameters = handle_ambiguous_tuple(parameters)
-            self.interval = (self.interval[0],
-                             self.buffer_ratio * np.max(tarr_in))
-            self.times = np.arange(*self.interval, self.timestep)
-            self.recalculate_values()
+        try:
+            if (handle_ambiguous_tuple(parameters) != tuple(self.parameters)
+                    or np.max(tarr_in) > self.interval[1]):
+                self.parameters = handle_ambiguous_tuple(parameters)
+                self.interval = (self.interval[0],
+                                 self.buffer_ratio * np.max(tarr_in))
+                self.times = np.arange(*self.interval, self.timestep)
+                self.recalculate_values()
+        except:
+            pass
 
         def get_value(t):
             index = tuple(np.where(np.abs(self.times - t)
@@ -68,6 +72,6 @@ class DiffEqFitSystem:
 
     def get_system_stats(self):
         print("Array accessed {} times with {} recalculations"
-              " (~{:.2f} acceses/calculation.)").format(
+              " (~{:.2f} acceses/calculation.)".format(
             self.accesses, self.recalculations,
-            (self.accesses / self.recalculations))
+            (self.accesses / self.recalculations)))
