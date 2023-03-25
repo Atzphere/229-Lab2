@@ -63,7 +63,7 @@ class DiffEqFitSystem:
             index = tuple(np.where(np.abs(self.times - t)
                                    <= (self.timestep / 1.5)))
             self.accesses += 1
-            return self.y[index]
+            return self.y[index][0]
 # ERROR HAPPENING BECAUSE WE'RE RETURNING MULTIPLE - EASY TO FIX JUST PICK FIRST ONE
         if hasattr(tarr_in, '__iter__'):
             return np.vectorize(get_value)(tarr_in)

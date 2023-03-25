@@ -31,7 +31,6 @@ print("...done")
 # plt.errorbar(y, t, yerr=d, fmt=".")
 # plt.show()
 
-T_amb = to_kelvin(24.2)  # K
 
 # MODEL CYLINDERS:
 
@@ -50,9 +49,9 @@ maddie_cyl.mass = maddie_cyl.volume * 2710
 # print(maddie_cyl.volume * 890)
 
 
-dat = rough
-cyl = rough_cyl
-trialname = "rough"
+dat = lacquer
+cyl = lacquer_cyl
+trialname = "lacquered"
 
 y, d, t = dat.chunked(30)
 cyl.mass = cyl.volume * 2710
@@ -66,7 +65,7 @@ dat.ydelta = d
 y_delta = d
 print(len(y) == len(t))
 
-Atemp = 18 + 273.15 # K
+Atemp = to_kelvin(21.5)  # K
 
 # INTENSIVE PROPERTIES / PHYSICAL CONSTANTS
 
@@ -107,8 +106,8 @@ def diffeq(t, yarr, *args):
 
     T = yarr[0]
     epsilon = np.abs(args[0])
-    T_amb = args[1]
-    cylinder = args[2]
+    T_amb = Atemp
+    cylinder = args[1]
 
     D = cylinder.diameter
     A = cylinder.area
@@ -130,7 +129,7 @@ def diffeq(t, yarr, *args):
     return dT
 
 
-sys = fitsystem.DiffEqFitSystem(diffeq, (999, 298), dat.initial_y,
+sys = fitsystem.DiffEqFitSystem(diffeq, (999,), dat.initial_y,
                                       get_timestep(
                                           dat.times), dat.time_interval,
                                       constant_params=cyl)
@@ -151,7 +150,7 @@ print(p)
 
 params, pcov = opt.curve_fit(sys.get_values, dat.times,
                              dat.y,
-                             sigma=y_delta * np.ones(len(dat.y)), p0=(0.231, 298))
+                             sigma=y_delta * np.ones(len(dat.y)), p0=(0.231,))
 
 
 perr = np.sqrt(np.diag(pcov))[0]
@@ -164,9 +163,9 @@ sys.get_system_stats()
 fig, ax = plt.subplots(1, 2, figsize=(12.8, 4.8))
 ax[0].errorbar(dat.times, dat.y, yerr=y_delta, label="Data", fmt='.')
 final_epsilon = params[0]
-final_t = params[1]
-print("Final temperature: {}".format(final_t))
-model = sys.get_values(dat.times, (final_epsilon, final_t))
+# final_t = params[1]
+# print("Final temperature: {}".format(final_t))
+model = sys.get_values(dat.times, (final_epsilon,))
 ax[0].plot(dat.times, model, label="Model")
 ax[0].set_title(
     "Cooling curve of {trial} object over time ($\\epsilon = {val:.4f}\\pm {unc:.4f}$)".
